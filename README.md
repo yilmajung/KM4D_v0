@@ -20,11 +20,11 @@ A research methodology for systematically extracting and linking development pol
 - [Research Questions](#research-questions)
 - [Architecture](#architecture)
 - [Installation](#installation)
-- [Usage](#usage)
+<!-- - [Usage](#usage)
 - [Expected Outputs](#expected-outputs)
 - [Documentation](#documentation)
 - [Citation](#citation)
-- [License](#license)
+- [License](#license) -->
 
 ---
 
@@ -100,7 +100,7 @@ KSP Reports (Practice)          Dev Economics Textbooks (Theory)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/)
 
 ```python
-# Create new notebook, paste the complete code from ksp_pilot_complete.py
+# Upload ksp_pilot_complete.ipynb to Colab, or paste code from ksp_pilot_complete.py
 ```
 
 ### 2. Setup
