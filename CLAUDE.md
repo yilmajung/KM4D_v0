@@ -130,11 +130,11 @@ class Config:
 ~140 keywords at the most specific level. Full hierarchy embedded in the LLM prompt.
 
 ## Knowledge Types
+1. Policy Entrepreneurship (leadership)
+2. Policy Implementation & Coordinating Mechanism
+3. Organizational/Individual Capacity
+4. Technical Know-how
 
-1. Contextual background and situation analysis
-2. Policy implementation and coordinating mechanism
-3. Technical methodology and analytical framework
-4. Recommendations and future directions
 
 ## Output Schema
 

@@ -83,10 +83,10 @@ KSP Report PDFs                   Textbook PDFs
 - Multi-sector tagging supported
 
 ### 4 Knowledge Types
-- Contextual background and situation analysis
-- Policy implementation and coordinating mechanism
-- Technical methodology and analytical framework
-- Recommendations and future directions
+- Policy Entrepreneurship (leadership)
+- Policy Implementation & Coordinating Mechanism
+- Organizational/Individual Capacity
+- Technical Know-how
 
 ### Korean Policy Extraction
 - Structured fields: policy_name, year_initiated, organization, challenge_addressed, policy_instruments, sector
