@@ -1,14 +1,11 @@
 # KSP Development Knowledge Extraction
 
-**Linking Theory and Practice in Development Economics using LLM + RAG**
+**Chapter-Level Classification & Policy Extraction using LLM + RAG**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A research methodology for systematically extracting and linking development policies from Korea's Knowledge Sharing Program (KSP) reports with theoretical frameworks from development economics textbooks.
-
-**Key Idea:** Systematic theory-practice mapping in development economics at scale using dual-collection RAG architecture.
+A research methodology for extracting and classifying development knowledge from Korea's Knowledge Sharing Program (KSP) reports at the chapter level, linking Korean policy experiences with theoretical frameworks from development economics textbooks.
 
 ---
 
@@ -17,79 +14,95 @@ A research methodology for systematically extracting and linking development pol
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [Quick Start](#quick-start)
-- [Research Questions](#research-questions)
 - [Architecture](#architecture)
+- [Output Schema](#output-schema)
 - [Installation](#installation)
-<!-- - [Usage](#usage)
-- [Expected Outputs](#expected-outputs)
-- [Documentation](#documentation)
-- [Citation](#citation)
-- [License](#license) -->
 
 ---
 
 ## Overview
 
-This project extracts **prescriptive knowledge** (policies, programs, implementation details) from 566 KSP advisory reports and links them to **propositional knowledge** (theories, frameworks) from development economics textbooks.
+This project analyzes **KSP advisory reports** at the chapter/sub-chapter level, performing four tasks per chapter:
+
+1. **Taxonomy Classification** -- tags sectors & keywords from a 6-sector, ~140-keyword development cooperation taxonomy
+2. **Knowledge Type Classification** -- classifies content as one of 4 knowledge types
+3. **Korean Policy Extraction** -- extracts structured policy information (name, year, organization, instruments, etc.)
+4. **Theory Linking** -- matches related theories from development economics textbooks via RAG
 
 **Current Phase:** Pilot study with 4 KSP reports + 2 textbooks
 
-**Methodology:** Open-source LLM + Retrieval-Augmented Generation (RAG) with dual vector databases
+**Platform:** Google Colab
 
-**Platform:** Google Colab (A100 GPU)
-
-### What This Project Does
+### How It Works
 
 ```
-KSP Reports (Practice)          Dev Economics Textbooks (Theory)
-        ↓                                      ↓
-   Extract policies                   Extract concepts
-        ↓                                      ↓
-   ChromaDB Collection                ChromaDB Collection
-        ↓                                      ↓
-        └──────────────┬──────────────────────┘
-                       ↓
-              Cross-Query & Link
-                       ↓
-         ┌─────────────────────────┐
-         │  Policy Database with   │
-         │  Theory Links           │
-         └─────────────────────────┘
-                       ↓
-         Analysis & Visualization
+KSP Report PDFs                   Textbook PDFs
+      |                                 |
+      v                                 v
+  ChapterExtractor               Chunk & Embed
+  (font-size heuristics)         (sentence-transformers)
+      |                                 |
+      v                                 v
+  Chapters/Sub-chapters          ChromaDB Vector Store
+      |                                 |
+      +----------------+----------------+
+                        |
+                        v
+            Combined LLM Prompt (Claude)
+            per chapter:
+              1. Taxonomy classification
+              2. Knowledge type
+              3. Korean policy extraction
+              4. Theory linking (RAG context)
+                        |
+                        v
+              chapter_analysis.json
+                        |
+                        v
+              Visualizations & Analysis
 ```
+
+**Key design decisions:**
+- Chapters are read directly into the LLM context (no KSP chunking/RAG needed)
+- Textbook RAG is kept for theory linking
+- Single combined LLM call per chapter minimizes API costs
+- Full taxonomy embedded in prompt (~3K tokens)
 
 ---
 
 ## Key Features
 
-### Dual-Collection RAG Architecture
-- **KSP Collection:** 566 policy reports (20 years, 1,513 topics)
-- **Textbook Collection:** 4 development economics textbooks
-- **Cross-querying:** Automatic theory-practice linking
+### Chapter-Level Analysis
+- **ChapterExtractor** uses font-size heuristics to detect chapter/sub-chapter boundaries
+- No chunking or embedding of KSP reports -- full chapter text sent to LLM
+- Preserves document structure and context
 
-### Extraction
-- Policy name, year, organization, instruments
-- Evidence quotes (grounded in source documents)
-- Related theoretical concepts
-- Development stage classification
+### Development Cooperation Taxonomy
+- 6 sectors, 4-level hierarchy, ~140 keywords from the official taxonomy
+- Chapters mapped to specific sectors and keywords
+- Multi-sector tagging supported
 
-### Evaluation
-- Precision, Recall, F1 metrics
-- Gold standard comparison
-- Error analysis and categorization
+### 4 Knowledge Types
+- Contextual background and situation analysis
+- Policy implementation and coordinating mechanism
+- Technical methodology and analytical framework
+- Recommendations and future directions
+
+### Korean Policy Extraction
+- Structured fields: policy_name, year_initiated, organization, challenge_addressed, policy_instruments, sector
+- Evidence quotes required (verbatim from source)
+- "Not Applicable" when no Korean policies found in a chapter
+
+### Theory Linking via Textbook RAG
+- Textbooks indexed in ChromaDB (~7K chunks)
+- Per-chapter query retrieves relevant theory passages
+- LLM links policies to theoretical frameworks
 
 ### Visualizations
 - Sector distribution charts
-- Theory-practice network graphs
-- Temporal trend analysis
-- Coverage gap identification
-
-### Persistence & Scalability
-- ChromaDB persists to Google Drive
-- Process once, query many times
-- Incremental processing support
-- Scales from 4 to 566 reports
+- Knowledge type distribution
+- Sector x Knowledge type heatmap
+- Theory-practice network graphs per report
 
 ---
 
@@ -97,11 +110,7 @@ KSP Reports (Practice)          Dev Economics Textbooks (Theory)
 
 ### 1. Open in Google Colab
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/)
-
-```python
-# Upload ksp_pilot_complete.ipynb to Colab, or paste code from ksp_pilot_complete.py
-```
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yilmajung/KM4D_v0/blob/main/ksp_pilot_complete.ipynb)
 
 ### 2. Setup
 
@@ -110,67 +119,38 @@ KSP Reports (Practice)          Dev Economics Textbooks (Theory)
 from google.colab import drive
 drive.mount('/content/drive')
 
-# Add API key to Colab Secrets
+# Add API key to Colab Secrets (key icon in sidebar)
 # Name: ANTHROPIC_API_KEY
 # Value: sk-ant-...
 ```
 
 ### 3. Upload PDFs
 
-Navigate in Colab file browser:
-- Upload 4 KSP reports → `MyDrive/KSP_Pilot/data/raw/ksp_reports/`
-- Upload 2 textbooks → `MyDrive/KSP_Pilot/data/raw/textbooks/`
+Upload to Google Drive:
+- 4 KSP reports -> `MyDrive/KM4D_v0/data/raw/ksp_reports/`
+- 2 textbooks -> `MyDrive/KM4D_v0/data/raw/textbooks/`
 
-**Naming conventions:**
-- KSP: `2015_VNM_Industrial_Policy.pdf`
-- Textbooks: `Perkins_2013.pdf`
+### 4. Run Pipeline
 
-### 4. Run Pipeline (30-45 minutes)
-
-```python
-# Execute the complete pipeline
-# Section 7: Index documents (10 min)
-# Section 10: Extract policies (15 min)  
-# Section 12: Analyze results (5 min)
-```
+Run all cells sequentially:
+- **Section 1-3:** Setup, config, taxonomy
+- **Section 4:** Chapter extraction from KSP reports
+- **Section 5:** Textbook vector store (index once)
+- **Section 6:** Extract chapters from all reports
+- **Section 7-8:** LLM classification + extraction
+- **Section 9:** Visualization
+- **Section 10:** Summary
 
 ### 5. View Results
 
 ```python
-# Check extracted policies
 import json
-with open('/content/drive/MyDrive/KSP_Pilot/data/results/extracted_policies.json') as f:
-    policies = json.load(f)
-    
-print(f"Extracted {len(policies)} policies")
-print(json.dumps(policies[0], indent=2))
+with open('/content/drive/MyDrive/KM4D_v0/data/results/chapter_analysis.json') as f:
+    results = json.load(f)
+
+print(f"Analyzed {len(results)} chapters")
+print(json.dumps(results[0], indent=2))
 ```
-
-**Expected output:** 30-50 policies with theory links, sector classification, and evidence quotes
-
----
-
-## Research Questions
-
-This methodology addresses three core questions:
-
-### RQ1: How to systematically link theory with practice?
-**Answer:** Dual-collection RAG with cross-querying
-- Extract policies from KSP reports
-- Extract concepts from textbooks
-- Use semantic similarity to connect them
-
-### RQ2: What gaps exist between theory and practice?
-**Answer:** Theory coverage analysis
-- Which theories are well-implemented? (many policies)
-- Which theories are underutilized? (few policies)
-- Which practices lack theoretical foundation?
-
-### RQ3: Do policies cluster by sectors or other dimensions?
-**Answer:** Multi-dimensional analysis
-- Traditional: Sectoral categories (manufacturing, finance, etc.)
-- Novel: Governance mechanisms, development stages, policy instruments
-- Emergent: Data-driven clustering reveals new patterns
 
 ---
 
@@ -180,59 +160,90 @@ This methodology addresses three core questions:
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Platform** | Google Colab | Free compute with GPU acceleration (or A100) |
+| **Platform** | Google Colab | Free compute |
 | **Storage** | Google Drive | Persistent data across sessions |
-| **PDF Processing** | PyMuPDF, pdfplumber | Text extraction with structure |
-| **Chunking** | LangChain | Semantic segmentation (512/768 tokens) |
-| **Embeddings** | sentence-transformers | 384-dim vectors (all-MiniLM-L6-v2) |
-| **Vector DB** | ChromaDB | Dual collections with metadata |
-| **LLM** | Anthropic Claude Sonnet 4 | Structured extraction + linking |
-| **Evaluation** | scikit-learn | Precision, Recall, F1 |
-| **Visualization** | Matplotlib, NetworkX | Charts and network graphs |
-
-### ChromaDB Collections
-
-**Collection 1: KSP Reports**
-```python
-{
-  'collection': 'ksp_reports_pilot',
-  'chunks': ~320,  # 4 reports × 80 chunks
-  'metadata': ['year', 'country', 'sector', 'filename']
-}
-```
-
-**Collection 2: Textbooks**
-```python
-{
-  'collection': 'textbooks_pilot',
-  'chunks': ~400,  # 2 books × 200 chunks
-  'metadata': ['textbook', 'chapter', 'concept']
-}
-```
+| **PDF Processing** | PyMuPDF (fitz) | Chapter extraction via font-size heuristics |
+| **Textbook Chunking** | LangChain RecursiveCharacterTextSplitter | 768-token chunks |
+| **Embeddings** | sentence-transformers/all-MiniLM-L6-v2 | 384-dim vectors |
+| **Vector DB** | ChromaDB | Textbook collection only |
+| **LLM** | Anthropic Claude Sonnet 4 | Combined classification + extraction |
+| **Visualization** | Matplotlib, Seaborn, NetworkX | Charts and network graphs |
 
 ### Data Flow
 
 ```
-PDFs → Extract Text → Create Chunks → Generate Embeddings
-  ↓
-Store in ChromaDB (persist to Google Drive)
-  ↓
-Query both collections → Retrieve relevant passages
-  ↓
-Send to Claude API → Extract structured policies
-  ↓
-Link policies to theories → Save as JSON
-  ↓
-Analyze & Visualize → Generate insights
+Phase 1: Chapter Extraction
+  KSP PDFs -> ChapterExtractor -> chapters/sub-chapters (font-size heuristics)
+
+Phase 2: Textbook Indexing (run once)
+  Textbook PDFs -> LangChain chunking -> sentence-transformers -> ChromaDB
+
+Phase 3: Combined Analysis (per chapter)
+  For each chapter:
+    1. Query textbook ChromaDB for theory context
+    2. Build combined prompt (taxonomy + knowledge types + chapter text + theory context)
+    3. Call Claude API -> parse JSON response
+    4. Save to chapter_analysis.json
+
+Phase 4: Visualization
+  chapter_analysis.json -> sector charts, heatmaps, network graphs
 ```
+
+---
+
+## Output Schema
+
+Each chapter produces a JSON entry like:
+
+```json
+{
+  "report_id": "2023_QAT_Climate Smart Agriculture...",
+  "chapter_title": "3. Smart Agricultural Policy in Korea",
+  "chapter_level": 2,
+  "page_start": 45,
+  "page_end": 62,
+  "content_length": 8200,
+  "taxonomy_classification": {
+    "sectors": [{
+      "sector": "(4) Production & Trade",
+      "sub_sector_l1": "Agriculture, Forestry & Fisheries",
+      "sub_sector_l2": "Agricultural Development",
+      "keywords": ["Agricultural Policy & Administration", "Sustainable Agriculture"]
+    }],
+    "knowledge_type": "Policy implementation and coordinating mechanism",
+    "confidence": "high",
+    "reasoning": "Chapter describes Korea's smart agriculture policy framework..."
+  },
+  "korean_policies": [
+    {
+      "policy_name": "Smart Farm Innovation Valley Project",
+      "year_initiated": 2018,
+      "organization": "Ministry of Agriculture, Food and Rural Affairs",
+      "challenge_addressed": "Aging farming population and low agricultural productivity",
+      "policy_instruments": ["Technology demonstration farms", "Training programs", "R&D subsidies"],
+      "sector": "Agriculture",
+      "evidence_quote": "In 2018, the Korean government launched the Smart Farm Innovation Valley..."
+    }
+  ],
+  "related_theories": [
+    {
+      "theory": "Agricultural transformation and structural change (Todaro Ch. 9)",
+      "relevance": "Korea's shift from traditional to technology-intensive agriculture..."
+    }
+  ]
+}
+```
+
+When no Korean policies are found: `"korean_policies": "Not Applicable"`
+When no theory links are found: `"related_theories": "Not Applicable"`
 
 ---
 
 ## Installation
 
-### Option A: Google Colab
+### Option A: Google Colab (Recommended)
 
-No installation needed! Everything runs in browser.
+No installation needed. Open the notebook and run all cells.
 
 **Requirements:**
 - Google account
@@ -241,78 +252,87 @@ No installation needed! Everything runs in browser.
 ### Option B: Local Setup
 
 ```bash
-# Clone repository
-git clone https://github.com/yilmajung/ksp-knowledge-extraction.git
-cd ksp-knowledge-extraction
+git clone https://github.com/yilmajung/KM4D_v0.git
+cd KM4D_v0
 
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 
-# Install dependencies
 pip install pymupdf pdfplumber sentence-transformers chromadb anthropic \
-  pandas numpy scikit-learn matplotlib seaborn plotly networkx umap-learn
+  pandas numpy scikit-learn matplotlib seaborn plotly networkx
 
-# Set API key
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
-<!-- 
+
 ---
 
-## Usage
+## KSP Reports Used (Pilot)
 
-### Basic Workflow
+| Report | Country | Topic |
+|--------|---------|-------|
+| 2009_VNM | Vietnam | Socio-economic Development Strategy 2011-20 |
+| 2014_SLV | El Salvador | Innovation Ecosystem (Plastics, Pharma, Textiles) |
+| 2023_KAZ | Kazakhstan | Extending Life of Old Power Plants |
+| 2023_QAT | Qatar | Climate Smart Agriculture & Indoor Farming |
 
-```python
-# The complete implementation is in ksp_pilot_complete.py
-# Just run it in Google Colab!
+## Textbooks Used (Pilot)
 
-# Phase 1: Index documents (run once)
-ksp_chunks = process_and_index_ksp_reports()
-textbook_chunks = process_and_index_textbooks()
+- Perkins (2012) - *Economics of Development*
+- Todaro (2012) - *Economic Development*
 
-# Phase 2: Extract policies (run many times)
-extracted_policies = extract_all_policies()
+---
 
-# Phase 3: Analyze
-policy_df = analyze_policies(extracted_policies)
+## Project Structure
+
+```
+KM4D_v0/
+  ksp_pilot_complete.ipynb     # Main Colab notebook
+  Taxonomy_20250925.pdf        # Taxonomy reference
+  CLAUDE.md                    # Project instructions
+  README.md                    # This file
+
+Google Drive (KM4D_v0/):
+  data/
+    raw/
+      ksp_reports/             # 4 KSP PDF reports
+      textbooks/               # 2 textbook PDFs
+    processed/
+      chapter_summaries.json   # Extracted chapter outlines
+      textbook_chunks.json     # Processed textbook chunks
+    results/
+      chapter_analysis.json    # Main output
+      sector_distribution.png
+      knowledge_type_distribution.png
+      sector_knowledge_heatmap.png
+      network_*.png            # Per-report theory-practice networks
+  vector_db/                   # ChromaDB persistence (textbooks)
 ```
 
-### Query ChromaDB Directly
+---
 
-```python
-# Search KSP reports
-results = ksp_store.search(
-    query="export processing zones industrial policy",
-    n_results=5,
-    filter_dict={"sector": "Manufacturing"}
-)
+## Cost Estimate
 
-# Search textbooks
-theory_results = textbook_store.search(
-    query="special economic zones development theory",
-    n_results=3
-)
-```
+### Pilot (4 reports)
 
-### Custom Analysis
+| Item | Cost |
+|------|------|
+| Anthropic API | ~$1-3 (depends on chapter count) |
+| Google Colab | $0 |
+| ChromaDB + Embeddings | $0 |
 
-```python
-# Filter by sector
-manufacturing_policies = [
-    p for p in extracted_policies 
-    if p['sector'] == 'Manufacturing'
-]
+### Full Scale (566 reports)
 
-# Theory coverage analysis
-from collections import Counter
-theory_counts = Counter(
-    p['related_theory'] 
-    for p in extracted_policies 
-    if p.get('related_theory')
-)
+| Item | Cost |
+|------|------|
+| Anthropic API | ~$50-150 |
+| Google Colab Pro | $10/mo |
 
-print("Top 10 theories in practice:")
-for theory, count in theory_counts.most_common(10):
-    print(f"  {theory}: {count} policies")
-``` -->
+---
+
+## License
+
+MIT
+
+---
+
+**Last Updated:** 2026-02-08
