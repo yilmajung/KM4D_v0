@@ -310,29 +310,4 @@ Google Drive (KM4D_v0/):
 
 ---
 
-## Cost Estimate
-
-### Pilot (4 reports)
-
-| Item | Cost |
-|------|------|
-| Anthropic API | ~$1-3 (depends on chapter count) |
-| Google Colab | $0 |
-| ChromaDB + Embeddings | $0 |
-
-### Full Scale (566 reports)
-
-| Item | Cost |
-|------|------|
-| Anthropic API | ~$50-150 |
-| Google Colab Pro | $10/mo |
-
----
-
-## License
-
-MIT
-
----
-
 **Last Updated:** 2026-02-08
